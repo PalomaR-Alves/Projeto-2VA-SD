@@ -9,6 +9,6 @@ while ! nc -z "$HOST" "$PORT"; do
   sleep 1
 done
 
-echo "Banco de dados está pronto 🎉"
+echo "Banco de dados está pronto"
 
 exec "$@"
