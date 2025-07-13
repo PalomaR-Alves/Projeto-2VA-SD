@@ -1,0 +1,72 @@
+version: '3.8'
+
+services:
+  users:
+    build: ./users
+    container_name: users
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./users:/app
+    depends_on:
+      - db_users
+    environment:
+      - DJANGO_DB_HOST=db_users
+      - DJANGO_DB_PORT=5432
+      - DJANGO_DB_NAME=usuarios_db
+      - DJANGO_DB_USER=user
+      - DJANGO_DB_PASSWORD=password
+      - DJANGO_SECRET_KEY=sua-chave-secreta
+    command: ["/wait-for.sh", "python", "manage.py", "runserver", "0.0.0.0:8000"]
+  db_users:
+    image: postgres:15
+    container_name: db_users
+    restart: always
+    environment:
+      POSTGRES_DB: usuarios_db
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    volumes:
+      - postgres_data_users:/var/lib/postgresql/data
+
+  treinos:
+    build: ./treinos
+    container_name: treinos
+    ports:
+      - "8001:8000"
+    volumes:
+      - ./treinos:/app
+    depends_on:
+      - db_treinos
+    environment:
+      - DJANGO_DB_HOST=db_treinos
+      - DJANGO_DB_NAME=treinos_db
+      - DJANGO_DB_USER=user
+      - DJANGO_DB_PASSWORD=password
+      - DJANGO_SECRET_KEY=sua-chave-secreta
+
+  db_treinos:
+    image: postgres:15
+    container_name: db_treinos
+    restart: always
+    environment:
+      POSTGRES_DB: treinos_db
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    volumes:
+      - postgres_data_treinos:/var/lib/postgresql/data
+
+  frontend:
+    build: ./frontend
+    container_name: frontend
+    ports:
+      - "3000:80"
+    volumes:
+      - ./frontend:/usr/share/nginx/html
+    depends_on:
+      - users
+      - treinos
+
+volumes:
+  postgres_data_users:
+  postgres_data_treinos:
