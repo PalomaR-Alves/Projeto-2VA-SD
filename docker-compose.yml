@@ -29,6 +29,8 @@ services:
       POSTGRES_PASSWORD: password
     volumes:
       - postgres_data_users:/var/lib/postgresql/data
+    ports:
+      - "5444:5432"
 
   treinos:
     build: ./backend/treinos
@@ -56,6 +58,8 @@ services:
       POSTGRES_PASSWORD: password
     volumes:
       - postgres_data_treinos:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
 
   frontend:
     build: ./frontend
