@@ -41,7 +41,7 @@ class Professor(User):
     cref = models.CharField(max_length=20)
     bio_profissional = models.TextField()
     data_admissao = models.DateField()
-    data_saida = models.DateField()
+    data_saida = models.DateField(null=True, blank=True)
 
     class Meta:
         verbose_name = "Professor"

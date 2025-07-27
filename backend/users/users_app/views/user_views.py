@@ -6,12 +6,26 @@ from django.http import HttpResponse
 from django.http import HttpResponseNotFound
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET
-from users_app.controllers import user_controller 
+from users_app.controllers import user_controller
+from users_app.models.user_models import Professor
+from users_app.models.user_models import Aluno
 
 
 def exemplo_view(request):
     return HttpResponse("USERS tá funcionando!")
 
+@require_GET
+def get_tipo_usuario(request, user_id):
+    try:
+        tipo = user_controller.get_tipo_usuario(user_id)
+
+        if tipo:
+            return JsonResponse({"tipo": tipo})
+        else:
+            return HttpResponseNotFound("Usuário não encontrado")
+
+    except Exception:
+        return HttpResponseNotFound("Erro ao buscar usuário")
 
 @csrf_exempt
 def create_user(request):
@@ -46,27 +60,7 @@ def get_user_by_id(request, user_id):
     try:
         user = user_controller.get_user_by_id(user_id)
 
-        return JsonResponse({
-            "id": user.id,
-            "nome": user.nome,
-            "email": user.email,
-            "telefone": user.telefone,
-            "genero": user.genero,
-            "is_ativo": user.is_ativo,
-            "criado_em": user.criado_em.isoformat(),
-        })
-
-    except Exception:
-        return HttpResponseNotFound("Usuário não encontrado")
-
-
-@require_GET
-def get_all_users(request):
-    alunos = user_controller.get_all_users(tipo="aluno")
-    profs = user_controller.get_all_users(tipo="professor")
-
-    def serialize(user):
-        return {
+        base = {
             "id": user.id,
             "nome": user.nome,
             "email": user.email,
@@ -76,8 +70,53 @@ def get_all_users(request):
             "criado_em": user.criado_em.isoformat(),
         }
 
-    all_users = [*map(serialize, alunos), *map(serialize, profs)]
-    return JsonResponse(all_users, safe=False)
+        if isinstance(user, Aluno):
+            base.update({
+                "tipo": "aluno",
+                "data_nasc": user.data_nasc.isoformat(),
+                "objetivo": user.objetivo,
+                "altura_cm": user.altura_cm,
+                "peso_kg": user.peso_kg,
+            })
+        elif isinstance(user, Professor):
+            base.update({
+                "tipo": "professor",
+                "cref": user.cref,
+                "bio_profissional": user.bio_profissional,
+                "data_admissao": user.data_admissao.isoformat() if user.data_admissao else None,
+                "data_saida": user.data_saida.isoformat() if user.data_saida else None,
+            })
+
+
+        return JsonResponse(base)
+
+    except Exception as e:
+        return HttpResponseNotFound(f"Usuário não encontrado: {str(e)}")
+
+
+
+@require_GET
+def get_all_users(request):
+    tipo = request.GET.get("tipo")  # aluno, professor ou None
+
+    try:
+        users = user_controller.get_all_users(tipo=tipo)
+
+        def serialize(user):
+            return {
+                "id": user.id,
+                "nome": user.nome,
+                "email": user.email,
+                "telefone": user.telefone,
+                "genero": user.genero,
+                "is_ativo": user.is_ativo,
+                "criado_em": user.criado_em.isoformat(),
+            }
+
+        return JsonResponse([serialize(u) for u in users], safe=False)
+
+    except ValueError as e:
+        return HttpResponseBadRequest(str(e))
 
 
 @require_GET
@@ -89,7 +128,7 @@ def get_user_by_email(request):
     try:
         user = user_controller.get_user_by_email(email)
 
-        return JsonResponse({
+        base = {
             "id": user.id,
             "nome": user.nome,
             "email": user.email,
@@ -97,10 +136,31 @@ def get_user_by_email(request):
             "genero": user.genero,
             "is_ativo": user.is_ativo,
             "criado_em": user.criado_em.isoformat(),
-        })
+        }
 
-    except Exception:
-        return HttpResponseNotFound("Usuário não encontrado")
+        if isinstance(user, Aluno):
+            base.update({
+                "tipo": "aluno",
+                "data_nasc": user.data_nasc.isoformat(),
+                "objetivo": user.objetivo,
+                "altura_cm": user.altura_cm,
+                "peso_kg": user.peso_kg,
+            })
+        elif isinstance(user, Professor):
+            base.update({
+                "tipo": "professor",
+                "cref": user.cref,
+                "bio_profissional": user.bio_profissional,
+                "data_admissao": user.data_admissao.isoformat() if user.data_admissao else None,
+                "data_saida": user.data_saida.isoformat() if user.data_saida else None,
+            })
+
+
+        return JsonResponse(base)
+
+    except Exception as e:
+        return HttpResponseNotFound(f"Erro ao buscar usuário por email: {str(e)}")
+
 
 
 @csrf_exempt
