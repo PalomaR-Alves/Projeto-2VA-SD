@@ -3,6 +3,7 @@ from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
 from users_app.models.user_models import Aluno, Professor
 
+
 def get_tipo_usuario(user_id):
     if Professor.objects.filter(id=user_id).exists():
         return "professor"
@@ -10,6 +11,24 @@ def get_tipo_usuario(user_id):
         return "aluno"
     else:
         return None
+
+
+def get_nome_usuario(user_id):
+    prof = Professor.objects.filter(id=user_id).first()
+    if prof:
+        return prof.nome
+
+    al = Aluno.objects.filter(id=user_id).first()
+    if al:
+        return al.nome
+    return None
+
+def get_objetivo_aluno(user_id):
+    al = Aluno.objects.filter(id=user_id).first()
+    if al:
+        return al.objetivo
+    return "Aluno não encontrado"
+
 
 def create_user(data):
     tipo = data.get("tipo")  # "aluno" ou "professor"
