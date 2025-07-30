@@ -1,5 +1,6 @@
 from treinos_app.views import treino_views
 from treinos_app.views import exercicio_views
+from treinos_app.views import treino_exercicio_views
 from django.urls import path
 
 urlpatterns = [
@@ -15,4 +16,10 @@ urlpatterns = [
     path("treinos/<int:treino_id>/", treino_views.get_treino_by_id, name="get_treino_by_id"),
     path("treinos/<int:treino_id>/update/", treino_views.update_treino, name="update_treino"),
     path("treinos/<int:treino_id>/delete/", treino_views.delete_treino, name="delete_treino"),
+    path("treinos/<int:treino_id>/feedback/", treino_views.gerar_feedback, name="feedback"),
+    path("treino-exercicio/create/", treino_exercicio_views.create_treino_exercicio, name="create_treino_exercicio"),
+    path("treino-exercicio/<int:te_id>/", treino_exercicio_views.get_treino_exercicio_by_id, name="get_treino_exercicio_by_id"),
+    path("treino-exercicio/", treino_exercicio_views.get_all_treino_exercicios, name="get_all_treino_exercicios"),
+    path("treino-exercicio/<int:te_id>/update/", treino_exercicio_views.update_treino_exercicio, name="update_treino_exercicio"),
+    path("treino-exercicio/<int:te_id>/delete/", treino_exercicio_views.delete_treino_exercicio, name="delete_treino_exercicio"),
 ]

@@ -108,3 +108,14 @@ def delete_treino(request, treino_id):
 
     except Exception:
         return HttpResponseNotFound("Treino não encontrado")
+
+
+@require_GET
+def gerar_feedback(request, treino_id):
+    try:
+        feedback = treino_controller.gerar_feedback(treino_id)
+        return JsonResponse({"feedback": feedback})
+    except ValueError as e:
+        return JsonResponse({"erro": str(e)}, status=400)
+    except Exception as e:
+        return JsonResponse({"erro": "Erro inesperado ao gerar feedback."}, status=500)

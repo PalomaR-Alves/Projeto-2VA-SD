@@ -26,6 +26,33 @@ def get_tipo_usuario(request, user_id):
 
     except Exception:
         return HttpResponseNotFound("Erro ao buscar usuário")
+    
+@require_GET
+def get_nome_usuario(request, user_id):
+    try:
+        nome = user_controller.get_nome_usuario(user_id)
+
+        if nome:
+            return JsonResponse({"nome": nome})
+        else:
+            return HttpResponseNotFound("Usuário não encontrado")
+
+    except Exception:
+        return HttpResponseNotFound("Erro ao buscar usuário")
+    
+@require_GET
+def get_objetivo_aluno(request, user_id):
+    try:
+        obj = user_controller.get_objetivo_aluno(user_id)
+
+        if obj:
+            return JsonResponse({"objetivo": obj})
+        else:
+            return HttpResponseNotFound("Aluno não encontrado")
+
+    except Exception:
+        return HttpResponseNotFound("Erro ao buscar aluno")
+    
 
 @csrf_exempt
 def create_user(request):
