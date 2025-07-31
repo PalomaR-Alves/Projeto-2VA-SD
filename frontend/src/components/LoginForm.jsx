@@ -1,7 +1,9 @@
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import './LoginForm.css'
 
 function LoginForm() {
+  const navigate = useNavigate()
+
   const handleLogin = async (e) => {
     e.preventDefault()
     const email = e.target.email.value
@@ -20,7 +22,18 @@ function LoginForm() {
 
       if (response.ok) {
         alert('Login realizado com sucesso!')
-        // redirecionamento aqui
+
+        // salvar user no localStorage
+        localStorage.setItem("user", JSON.stringify(data))
+
+        // redirecionar com base no tipo
+        if (data.tipo === "aluno") {
+          navigate("/home/aluno")
+        } else if (data.tipo === "professor") {
+          navigate("/home/professor")
+        } else {
+          alert("Tipo de usuário desconhecido.")
+        }
       } else {
         alert(data.detail || 'Erro ao logar')
       }

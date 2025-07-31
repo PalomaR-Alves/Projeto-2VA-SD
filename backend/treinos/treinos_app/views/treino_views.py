@@ -53,6 +53,25 @@ def get_treino_by_id(request, treino_id):
         })
     except Exception:
         return HttpResponseNotFound("Treino não encontrado")
+    
+
+@require_GET
+def listar_treinos_aluno(request, aluno_id):
+    try:
+        treinos = treino_controller.get_treinos_aluno(aluno_id)
+        data = [
+            {
+                "id": treino.id,
+                "professor_id": treino.professor_id,
+                "data_inicio": treino.data_inicio.isoformat(),
+                "data_fim": treino.data_fim.isoformat(),
+                "observacoes": treino.observacoes,
+            }
+            for treino in treinos
+        ]
+        return JsonResponse({"treinos": data}, status=200)
+    except ValueError as e:
+        return JsonResponse({"erro": str(e)}, status=400)
 
 
 @require_GET
