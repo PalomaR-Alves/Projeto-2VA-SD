@@ -2,6 +2,7 @@ from django.contrib.auth.hashers import make_password
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
 from users_app.models.user_models import Aluno, Professor
+from time import timezone
 
 
 def get_tipo_usuario(user_id):
@@ -70,7 +71,7 @@ def create_user(data):
         )
 
     if tipo == "professor":
-        required = ["cref", "bio_profissional", "data_admissao"]
+        required = ["cref", "bio_profissional"]
         for field in required:
             if not data.get(field):
                 raise ValueError(f"Campo obrigatório ausente: {field}")
@@ -79,7 +80,7 @@ def create_user(data):
             **common_fields,
             cref=data["cref"],
             bio_profissional=data["bio_profissional"],
-            data_admissao=data["data_admissao"]
+            data_admissao=timezone.now()
         )
 
 

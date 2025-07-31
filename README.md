@@ -6,7 +6,7 @@ Este projeto utiliza Python com framework Django nos módulos do back-end, e Jav
 ![Diagrama de Arquitetura](diagrama-breaking_fat.png)
 
 ### Breaking Fat
-<img src="breaking_fat.png" alt="Breaking Fat Logo" width="300"/>
+<img src="frontend/public/breaking_fat.png" alt="Breaking Fat Logo" width="300"/>
 
 Breaking Fat é um sistema de gerenciamento de academia, nele os alunos e professores da academia podem se cadastrar para gerenciar seus exercícios e treinos.
 
