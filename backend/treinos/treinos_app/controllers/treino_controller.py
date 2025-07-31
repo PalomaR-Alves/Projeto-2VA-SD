@@ -76,6 +76,18 @@ def get_treino_by_id(treino_id):
         return Treino.objects.get(id=treino_id)
     except ObjectDoesNotExist:
         raise ValueError("Treino não encontrado")
+    
+
+def get_treinos_aluno(aluno_id):
+    if not verificar_usuario(aluno_id):
+        raise ValueError("Aluno não encontrado")
+
+    tipo = get_tipo_usuario(aluno_id)
+    if tipo != "aluno":
+        raise ValueError("ID fornecido não pertence a um aluno")
+
+    return Treino.objects.filter(aluno_id=aluno_id)
+
 
 
 def get_all_treinos():
