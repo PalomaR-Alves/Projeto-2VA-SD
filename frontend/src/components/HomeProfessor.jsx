@@ -65,10 +65,12 @@ export default function HomeProfessor({ user }) {
           <button className="w-full mb-2" onClick={() => navigate('/prof/exercicio/criar')}>
             Criar exercício
           </button>
-          <button className="w-full mb-2 btn-secondary" onClick={handleViewExercicios}>
+          <button
+            className="w-full mb-2"
+            onClick={() => navigate('/prof/exercicios')}
+          >
             Ver todos os exercícios
           </button>
-
           {/* lista de exercícios */}
           {exLoading && <p>Carregando exercícios...</p>}
           {exError && <p style={{ color: 'red' }}>Erro: {exError}</p>}
@@ -88,6 +90,12 @@ export default function HomeProfessor({ user }) {
           <h2 className="text-lg font-semibold mb-2">Treinos</h2>
           <button className="w-full mb-2" onClick={() => navigate('/prof/treino/criar')}>
             Criar treino
+          </button>
+          <button
+            className="w-full mb-2"
+            onClick={() => navigate('/prof/aluno/treinos/buscar')}
+          >
+            Treinos de um aluno
           </button>
         </div>
       </div>

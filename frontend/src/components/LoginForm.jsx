@@ -1,7 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom'
 import './LoginForm.css'
 
-function LoginForm() {
+function LoginForm({ setUser }) {
   const navigate = useNavigate()
 
   const handleLogin = async (e) => {
@@ -23,7 +23,7 @@ function LoginForm() {
       if (response.ok) {
         alert('Login realizado com sucesso!')
 
-        // salvar user no localStorage
+        setUser(data)
         localStorage.setItem("user", JSON.stringify(data))
 
         // redirecionar com base no tipo

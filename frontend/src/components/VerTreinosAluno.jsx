@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
-const modoTeste = true
+const modoTeste = false
+
 const dadosMockados = [
-  { id: 1, inicio: "2025-08-01", fim: "2025-08-15", observacoes: "Resistência" },
-  { id: 2, inicio: "2025-08-16", fim: "2025-08-31", observacoes: "Hipertrofia" },
-  { id: 3, inicio: "2025-09-01", fim: "2025-09-15", observacoes: "Funcional" },
+  { id: 1, data_inicio: "2025-08-01", data_fim: "2025-08-15", observacoes: "Resistência" },
+  { id: 2, data_inicio: "2025-08-16", data_fim: "2025-08-31", observacoes: "Hipertrofia" },
+  { id: 3, data_inicio: "2025-09-01", data_fim: "2025-09-15", observacoes: "Funcional" },
 ]
 
 export default function VerTreinosAluno({ user }) {
@@ -14,14 +15,29 @@ export default function VerTreinosAluno({ user }) {
   const navigate = useNavigate()
 
   useEffect(() => {
+    if (!user) return
+
     if (modoTeste) {
       setTreinos(dadosMockados)
       setLoading(false)
-    } else if (user?.id) {
-      fetch(`http://localhost:8000/treinos/aluno/${user.id}/`)
-        .then(r => r.ok ? r.json() : Promise.reject())
-        .then(d => setTreinos(Array.isArray(d) ? d : d.treinos))
-        .catch(() => alert("Erro ao buscar treinos"))
+    } else {
+      fetch(`http://localhost:8001/treinos/aluno/${user.id}/`, {
+        credentials: 'include', // ← importante para enviar o cookie de sessão
+      })
+        .then(res => {
+          if (!res.ok) throw new Error('Erro ao buscar treinos')
+          return res.json()
+        })
+        .then(data => {
+          if (Array.isArray(data)) {
+            setTreinos(data)
+          } else {
+            setTreinos([])
+          }
+        })
+        .catch(err => {
+          console.error('Erro ao carregar treinos:', err)
+        })
         .finally(() => setLoading(false))
     }
   }, [user])
@@ -36,9 +52,10 @@ export default function VerTreinosAluno({ user }) {
         className="card mx-auto"
         style={{ maxHeight: 400, overflowY: 'auto' }}
       >
-        {treinos.length === 0
-          ? <p className="text-center text-gray-500">Nenhum treino.</p>
-          : treinos.map(t => (
+        {treinos.length === 0 ? (
+          <p className="text-center text-gray-500">Nenhum treino encontrado.</p>
+        ) : (
+          treinos.map(t => (
             <div
               key={t.id}
               onClick={() => navigate(`/aluno/treinos/${t.id}`)}
@@ -51,12 +68,12 @@ export default function VerTreinosAluno({ user }) {
                 marginBottom: 8,
               }}
             >
-              <p><strong>Início:</strong> {t.inicio}</p>
-              <p><strong>Fim:</strong> {t.fim}</p>
+              <p><strong>Início:</strong> {t.data_inicio}</p>
+              <p><strong>Fim:</strong> {t.data_fim}</p>
               <p><strong>Observações:</strong> {t.observacoes}</p>
             </div>
           ))
-        }
+        )}
       </div>
     </div>
   )

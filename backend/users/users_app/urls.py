@@ -12,4 +12,6 @@ urlpatterns = [
     path("users/<int:user_id>/objetivo/", user_views.get_objetivo_aluno),
     path("users/email/", user_views.get_user_by_email),
     path("users/<int:user_id>/", user_views.get_user_by_id),
+    path("users/login/", user_views.login_user),
+    path("users/logout/", user_views.logout_user),
 ]

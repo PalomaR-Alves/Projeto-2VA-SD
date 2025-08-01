@@ -1,38 +1,9 @@
 import React, { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 
-const modoTeste = true
+const modoTeste = false  // agora usando backend real
 
-const mockTreinos = {
-  1: {
-    id: 1,
-    dia_da_semana: 'segunda',
-    inicio: '2025-08-01',
-    fim: '2025-08-15',
-    observacoes: 'Treino de resistência',
-    criado_em: '2025-07-25 10:00:00',
-    aluno_nome: 'Maria Aluna',
-    professor_nome: 'Carlos Professor',
-    exercicios: [
-      { id: 1, nome: 'Agachamento', grupo_muscular: 'Pernas', equipamento: 'Barra', series: 4, repeticoes: 12, carga_kg: 40, ordem_no_dia: 1 },
-      { id: 2, nome: 'Supino Reto', grupo_muscular: 'Peito', equipamento: 'Halteres', series: 3, repeticoes: 10, carga_kg: 20, ordem_no_dia: 2 },
-    ],
-  },
-  2: {
-    id: 2,
-    dia_da_semana: 'quarta',
-    inicio: '2025-09-01',
-    fim: '2025-09-10',
-    observacoes: 'Treino de força',
-    criado_em: '2025-08-20 14:30:00',
-    aluno_nome: 'João Silva',
-    professor_nome: 'Ana Professor',
-    exercicios: [
-      { id: 3, nome: 'Levantamento Terra', grupo_muscular: 'Costas', equipamento: 'Barra', series: 3, repeticoes: 8, carga_kg: 80, ordem_no_dia: 1 },
-      { id: 4, nome: 'Desenvolvimento', grupo_muscular: 'Ombros', equipamento: 'Halteres', series: 3, repeticoes: 10, carga_kg: 15, ordem_no_dia: 2 },
-    ],
-  },
-}
+const mockTreinos = { /* ... mesmo conteúdo ... */ }
 
 export default function DetalhesTreinoAluno() {
   const { id } = useParams()
@@ -47,9 +18,15 @@ export default function DetalhesTreinoAluno() {
       setTreino(mockTreinos[tid] || null)
       setLoading(false)
     } else {
-      fetch(`http://localhost:8001/treinos/${id}/`)
-        .then(r => r.ok ? r.json() : Promise.reject())
-        .then(d => setTreino(d))
+      fetch(`http://localhost:8001/treinos/${id}/detalhes/`, {
+
+        credentials: 'include',
+      })
+        .then(res => {
+          if (!res.ok) throw new Error('Erro ao buscar treino')
+          return res.json()
+        })
+        .then(setTreino)
         .catch(() => alert('Erro ao buscar treino'))
         .finally(() => setLoading(false))
     }
@@ -91,13 +68,7 @@ export default function DetalhesTreinoAluno() {
         Detalhes do Treino
       </h1>
 
-      <div
-        style={{
-          display: 'flex',
-          gap: '24px',
-          alignItems: 'flex-start',
-        }}
-      >
+      <div style={{ display: 'flex', gap: '24px', alignItems: 'flex-start' }}>
         {/* Coluna Esquerda */}
         <div
           style={{
@@ -106,11 +77,12 @@ export default function DetalhesTreinoAluno() {
             borderRadius: '8px',
             padding: '16px',
             backgroundColor: '#ffffff',
+            color: '#000000',
           }}
         >
           <p><strong>Dia da semana:</strong> {treino.dia_da_semana}</p>
-          <p><strong>Início:</strong> {treino.inicio}</p>
-          <p><strong>Fim:</strong> {treino.fim}</p>
+          <p><strong>Início:</strong> {treino.data_inicio}</p>
+          <p><strong>Fim:</strong> {treino.data_fim}</p>
           <p><strong>Observações:</strong> {treino.observacoes}</p>
           <p><strong>Criado em:</strong> {treino.criado_em}</p>
           <p><strong>Aluno:</strong> {treino.aluno_nome}</p>
@@ -121,13 +93,12 @@ export default function DetalhesTreinoAluno() {
         <div
           style={{
             flex: 1,
-            minWidth: 0,           // <— permite encolher dentro do flex
             display: 'flex',
             flexDirection: 'column',
             gap: '16px',
+            minWidth: 0,
           }}
         >
-          {/* Botão */}
           <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
             <button
               onClick={handleFeedback}
@@ -146,32 +117,20 @@ export default function DetalhesTreinoAluno() {
             </button>
           </div>
 
-          {/* Container único para feedback + exercícios */}
           <div
             style={{
               flex: 1,
-              minWidth: 0,           // também aqui para garantir
-              maxWidth: '100%',
-              boxSizing: 'border-box',
               maxHeight: '450px',
               overflowY: 'auto',
-              overflowX: 'hidden',
               border: '3px solid #4caf50',
               borderRadius: '8px',
               backgroundColor: '#ffffff',
               padding: '16px',
-              whiteSpace: 'normal',
               wordBreak: 'break-word',
+              color: '#000000',
             }}
           >
-            <h2
-              style={{
-                marginTop: 0,
-                marginBottom: '12px',
-                fontSize: '18px',
-                fontWeight: '600',
-              }}
-            >
+            <h2 style={{ marginTop: 0, fontSize: '18px', fontWeight: '600' }}>
               Exercícios
             </h2>
 
@@ -183,8 +142,6 @@ export default function DetalhesTreinoAluno() {
                   border: '2px solid #4caf50',
                   borderRadius: '6px',
                   marginBottom: '16px',
-                  whiteSpace: 'pre-wrap',
-                  wordBreak: 'break-word',
                   fontStyle: 'italic',
                 }}
               >
@@ -192,7 +149,7 @@ export default function DetalhesTreinoAluno() {
               </div>
             )}
 
-            {treino.exercicios.map(ex => (
+            {treino.exercicios?.map(ex => (
               <div
                 key={ex.id}
                 style={{

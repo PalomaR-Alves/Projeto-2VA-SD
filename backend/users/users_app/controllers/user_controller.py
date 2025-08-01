@@ -1,9 +1,19 @@
 from django.contrib.auth.hashers import make_password
+from django.contrib.auth.hashers import check_password
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
 from users_app.models.user_models import Aluno, Professor
-from time import timezone
+from django.contrib.auth import authenticate
+from users_app.models.user_models import User
+from django.utils import timezone
 
+def autenticar_user(email, senha):
+    try:
+        user = User.objects.get(email=email)
+        if check_password(senha, user.senha):
+            return user
+    except User.DoesNotExist:
+        return None
 
 def get_tipo_usuario(user_id):
     if Professor.objects.filter(id=user_id).exists():

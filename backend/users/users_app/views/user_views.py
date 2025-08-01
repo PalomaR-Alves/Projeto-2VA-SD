@@ -5,14 +5,70 @@ from django.http import HttpResponseNotAllowed
 from django.http import HttpResponse
 from django.http import HttpResponseNotFound
 from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_GET
+from django.views.decorators.http import require_GET, require_POST
 from users_app.controllers import user_controller
 from users_app.models.user_models import Professor
 from users_app.models.user_models import Aluno
+from django.contrib.auth import get_user_model
+from django.contrib.auth import login, logout
+from django.views.decorators.http import require_http_methods
+import traceback
+from functools import wraps
 
 
 def exemplo_view(request):
     return HttpResponse("USERS tá funcionando!")
+
+def login_required_api(view_func):
+    @wraps(view_func)
+    def _wrapped_view(request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return JsonResponse({"erro": "Usuário não autenticado."}, status=401)
+        return view_func(request, *args, **kwargs)
+    return _wrapped_view
+
+User = get_user_model()
+@csrf_exempt
+@require_POST
+def login_user(request):
+    try:
+        data = json.loads(request.body)
+        email = data.get("email")
+        senha = data.get("senha")
+
+        if not email or not senha:
+            return HttpResponseBadRequest("Email e senha são obrigatórios.")
+
+        user = user_controller.autenticar_user(email, senha)
+
+        if user is None:
+            return HttpResponseNotFound("Credenciais inválidas.")
+
+        if not user.is_active:
+            return HttpResponseBadRequest("Usuário desativado.")
+
+        login(request, user)
+
+        tipo = "aluno" if hasattr(user, "aluno") else "professor"
+        return JsonResponse({
+            "id": user.id,
+            "nome": user.nome,
+            "email": user.email,
+            "tipo": tipo
+        })
+
+    except json.JSONDecodeError:
+        return HttpResponseBadRequest("JSON inválido.")
+    except Exception as e:
+        return HttpResponseBadRequest(str(e))
+
+
+@csrf_exempt
+@require_POST
+def logout_user(request):
+    logout(request)
+    return JsonResponse({"message": "Logout realizado com sucesso."})
+
 
 @require_GET
 def get_tipo_usuario(request, user_id):
@@ -83,6 +139,7 @@ def create_user(request):
 
 
 @require_GET
+@csrf_exempt
 def get_user_by_id(request, user_id):
     try:
         user = user_controller.get_user_by_id(user_id)
@@ -114,12 +171,10 @@ def get_user_by_id(request, user_id):
                 "data_saida": user.data_saida.isoformat() if user.data_saida else None,
             })
 
-
         return JsonResponse(base)
 
     except Exception as e:
         return HttpResponseNotFound(f"Usuário não encontrado: {str(e)}")
-
 
 
 @require_GET
@@ -191,15 +246,18 @@ def get_user_by_email(request):
 
 
 @csrf_exempt
+@require_http_methods(["PUT", "PATCH"])
 def update_user(request, user_id):
-    if request.method not in ["PUT", "PATCH"]:
-        return HttpResponseNotAllowed(["PUT", "PATCH"])
+    if request.method == "OPTIONS":
+        return HttpResponse()
 
     try:
         data = json.loads(request.body)
         user = user_controller.update_user(user_id, **data)
 
-        return JsonResponse({
+        is_professor = hasattr(user, "cref")
+
+        response = {
             "id": user.id,
             "nome": user.nome,
             "email": user.email,
@@ -207,13 +265,32 @@ def update_user(request, user_id):
             "genero": user.genero,
             "is_ativo": user.is_ativo,
             "criado_em": user.criado_em.isoformat(),
-        })
+            "tipo": "professor" if is_professor else "aluno",
+        }
+
+        if is_professor:
+            response.update({
+                "cref": user.cref,
+                "bio_profissional": user.bio_profissional,
+            })
+        else:
+            response.update({
+                "data_nasc": user.data_nasc,
+                "objetivo": user.objetivo,
+                "altura_cm": user.altura_cm,
+                "peso_kg": user.peso_kg,
+            })
+
+        return JsonResponse(response, status=200)
 
     except json.JSONDecodeError:
         return HttpResponseBadRequest("JSON inválido")
+    
     except Exception as e:
-        return HttpResponseBadRequest(str(e))
-
+        # LOGAR o erro no console do servidor para depurar depois
+        print("Erro interno no update_user:", str(e))
+        traceback.print_exc()
+        return HttpResponse(status=204) 
 
 @csrf_exempt
 def delete_user(request, user_id):

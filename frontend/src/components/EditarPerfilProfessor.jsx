@@ -1,10 +1,7 @@
 import { useState, useEffect } from 'react'
 
-const modoTeste = true
-
 export default function EditarPerfilProfessor() {
-  const stored = localStorage.getItem('user')
-  const user = stored ? JSON.parse(stored) : null
+  const [user, setUser] = useState(null)
 
   const [form, setForm] = useState({
     nome: '',
@@ -14,33 +11,32 @@ export default function EditarPerfilProfessor() {
     cref: '',
     bio_profissional: '',
   })
+
   const [loading, setLoading] = useState(true)
 
+  // Recuperar user do localStorage apenas uma vez
   useEffect(() => {
-    if (!user) return
-
-    if (modoTeste) {
-      setForm({
-        nome:             user.nome || '',
-        email:            user.email || '',
-        telefone:         user.telefone || '',
-        genero:           user.genero || '',
-        cref:             user.cref || '',
-        bio_profissional: user.bio_profissional || '',
-      })
-      setLoading(false)
-      return
+    const stored = localStorage.getItem('user')
+    if (stored) {
+      setUser(JSON.parse(stored))
     }
+  }, [])
 
-    fetch(`http://localhost:8000/users/${user.id}/`)
+  // Carregar dados do perfil
+  useEffect(() => {
+    if (!user) return;
+
+    fetch(`http://localhost:8000/users/${user.id}/`, {
+      method: 'GET',
+    })
       .then(r => r.ok ? r.json() : Promise.reject())
       .then(data => {
         setForm({
-          nome:             data.nome || '',
-          email:            data.email || '',
-          telefone:         data.telefone || '',
-          genero:           data.genero || '',
-          cref:             data.cref || '',
+          nome: data.nome || '',
+          email: data.email || '',
+          telefone: data.telefone || '',
+          genero: data.genero || '',
+          cref: data.cref || '',
           bio_profissional: data.bio_profissional || '',
         })
       })
@@ -55,26 +51,33 @@ export default function EditarPerfilProfessor() {
     const { name, value } = e.target
     setForm(f => ({ ...f, [name]: value }))
   }
+
   const handleSubmit = async e => {
     e.preventDefault()
     try {
-      const res = await fetch(`http://localhost:8000/users/${user.id}/`, {
+      const res = await fetch(`http://localhost:8000/users/${user.id}/update/`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          nome:             form.nome,
-          email:            form.email,
-          telefone:         form.telefone,
-          genero:           form.genero,
-          cref:             form.cref,
-          bio_profissional: form.bio_profissional,
-        }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(form),
       })
-      alert(res.ok ? 'Perfil de professor atualizado!' : 'Erro ao atualizar.')
-    } catch {
+
+      const data = await res.json()
+
+      if (res.ok) {
+        alert('Perfil de professor atualizado com sucesso!')
+        localStorage.setItem('user', JSON.stringify(data))
+      } else {
+        alert(`Erro: ${res.status} - ${data.detail || 'Erro ao atualizar.'}`)
+      }
+    } catch (err) {
+      console.error(err)
       alert('Erro na requisição.')
     }
   }
+
+
 
   return (
     <div
@@ -88,7 +91,7 @@ export default function EditarPerfilProfessor() {
         <form onSubmit={handleSubmit} className="space-y-3">
           <input
             name="nome"
-            defaultValue={form.nome}
+            value={form.nome}
             onChange={handleChange}
             placeholder="Nome"
             style={{ backgroundColor: '#fff' }}
@@ -97,7 +100,7 @@ export default function EditarPerfilProfessor() {
 
           <input
             name="email"
-            defaultValue={form.email}
+            value={form.email}
             onChange={handleChange}
             placeholder="Email"
             style={{ backgroundColor: '#fff' }}
@@ -106,7 +109,7 @@ export default function EditarPerfilProfessor() {
 
           <input
             name="telefone"
-            defaultValue={form.telefone}
+            value={form.telefone}
             onChange={handleChange}
             placeholder="Telefone"
             style={{ backgroundColor: '#fff' }}
@@ -115,21 +118,20 @@ export default function EditarPerfilProfessor() {
 
           <select
             name="genero"
-            defaultValue={form.genero}
+            value={form.genero}
             onChange={handleChange}
             style={{ backgroundColor: '#fff', color: '#000' }}
             className="w-full p-2 rounded border"
-            >
-            <option value="" style={{ color: '#000' }}>Selecione o gênero</option>
-            <option value="masculino" style={{ color: '#000' }}>Masculino</option>
-            <option value="feminino"  style={{ color: '#000' }}>Feminino</option>
-            <option value="outros"    style={{ color: '#000' }}>Outros</option>
+          >
+            <option value="">Selecione o gênero</option>
+            <option value="masculino">Masculino</option>
+            <option value="feminino">Feminino</option>
+            <option value="outros">Outros</option>
           </select>
-
 
           <input
             name="cref"
-            defaultValue={form.cref}
+            value={form.cref}
             onChange={handleChange}
             placeholder="CREF"
             style={{ backgroundColor: '#fff' }}
@@ -138,11 +140,11 @@ export default function EditarPerfilProfessor() {
 
           <textarea
             name="bio_profissional"
-            defaultValue={form.bio_profissional}
+            value={form.bio_profissional}
             onChange={handleChange}
             placeholder="Bio profissional"
             rows={4}
-            style={{ backgroundColor: '#fff' }}
+            style={{ backgroundColor: '#fff', color: '#000' }}
             className="w-full p-2 rounded border"
           />
 
