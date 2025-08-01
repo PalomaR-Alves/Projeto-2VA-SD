@@ -45,7 +45,7 @@ def get_objetivo_aluno(user_id):
 
 
 def create_treino(data):
-    required_fields = ["aluno_id", "professor_id", "data_inicio", "data_fim"]
+    required_fields = ["aluno_id", "professor_id", "dia_da_semana", "data_inicio", "data_fim"]
     for field in required_fields:
         if not data.get(field):
             raise ValueError(f"Campo obrigatório ausente: {field}")
@@ -65,6 +65,7 @@ def create_treino(data):
     return Treino.objects.create(
         aluno_id=data["aluno_id"],
         professor_id=data["professor_id"],
+        dia_da_semana=data["dia_da_semana"],
         data_inicio=data_inicio,
         data_fim=data_fim,
         observacoes=data.get("observacoes", "")

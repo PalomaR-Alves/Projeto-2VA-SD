@@ -39,18 +39,10 @@ def get_exercicio_by_id(exercicio_id):
 
 
 def get_exercicio_by_nome(nome):
-    nome_normalizado = nome.strip().lower().replace(" ", "")
-    exercicios = Exercicio.objects.all()
-
-    resultados = [
-        e for e in exercicios
-        if nome_normalizado in e.nome.lower().replace(" ", "")
-    ]
-
-    if not resultados:
-        raise ValueError("Nenhum exercício encontrado com esse nome.")
+    if not nome:
+        raise ValueError("Nenhum nome fornecido.")
     
-    return resultados
+    return Exercicio.objects.filter(nome__icontains=nome)
 
 
 def get_all_exercicios():

@@ -19,23 +19,32 @@ export default function CriarExercicio({ user }) {
 
   const handleSubmit = async e => {
     e.preventDefault()
+
     if (!user?.id) {
       alert('Professor não autenticado.')
       return
     }
+
     setLoading(true)
     try {
+      const payload = { ...form, professor_id: user.id }
+
       const res = await fetch('http://localhost:8001/exercicios/create/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, professor_id: user.id }),
+        body: JSON.stringify(payload),
       })
-      if (res.status !== 201) throw new Error(await res.text())
-      const data = await res.json()
-      alert(`Exercício "${data.nome}" criado com sucesso!`)
-      navigate('/home/professor')
+
+      if (res.status === 201) {
+        const data = await res.json()
+        alert(`Exercício "${data.nome}" criado com sucesso!`)
+        navigate('/home/professor')
+      } else {
+        const errorText = await res.text()
+        alert('Erro ao criar exercício:\n' + errorText)
+      }
     } catch (err) {
-      alert('Erro: ' + err.message)
+      alert('Erro na requisição: ' + err.message)
     } finally {
       setLoading(false)
     }
@@ -48,11 +57,10 @@ export default function CriarExercicio({ user }) {
     >
       <div
         className="main-card w-full max-w-md"
-        style={{ maxHeight: '80vh', overflowY: 'auto' }}
+        style={{ maxHeight: '80vh', overflowY: 'auto', padding: '16px' }}
       >
         <h1 className="text-xl font-bold text-center mb-4">Criar Exercício</h1>
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Nome */}
           <div className="flex flex-col">
             <label htmlFor="nome" className="mb-1 font-medium">Nome</label>
             <input
@@ -61,11 +69,10 @@ export default function CriarExercicio({ user }) {
               value={form.nome}
               onChange={handleChange}
               required
-              className="w-full bg-white border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-green-400"
+              className="w-full bg-white border border-gray-300 rounded px-2 py-1"
             />
           </div>
 
-          {/* Grupo Muscular */}
           <div className="flex flex-col">
             <label htmlFor="grupo_muscular" className="mb-1 font-medium">Grupo Muscular</label>
             <input
@@ -74,11 +81,10 @@ export default function CriarExercicio({ user }) {
               value={form.grupo_muscular}
               onChange={handleChange}
               required
-              className="w-full bg-white border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-green-400"
+              className="w-full bg-white border border-gray-300 rounded px-2 py-1"
             />
           </div>
 
-          {/* Equipamento */}
           <div className="flex flex-col">
             <label htmlFor="equipamento" className="mb-1 font-medium">Equipamento</label>
             <input
@@ -87,7 +93,7 @@ export default function CriarExercicio({ user }) {
               value={form.equipamento}
               onChange={handleChange}
               required
-              className="w-full bg-white border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-green-400"
+              className="w-full bg-white border border-gray-300 rounded px-2 py-1"
             />
           </div>
 
@@ -104,15 +110,19 @@ export default function CriarExercicio({ user }) {
               style={{
                 width: '100%',
                 backgroundColor: '#ffffff',
+                color: '#000000',
                 border: '1px solid #ccc',
                 borderRadius: '4px',
                 padding: '8px',
                 boxSizing: 'border-box',
+                resize: 'vertical',
+                fontFamily: 'inherit',
+                fontSize: '1rem',
+                lineHeight: 1.5,
               }}
             />
           </div>
 
-          {/* URL da Imagem */}
           <div className="flex flex-col">
             <label htmlFor="imagem_url" className="mb-1 font-medium">URL da Imagem</label>
             <input
@@ -120,11 +130,10 @@ export default function CriarExercicio({ user }) {
               name="imagem_url"
               value={form.imagem_url}
               onChange={handleChange}
-              className="w-full bg-white border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-green-400"
+              className="w-full bg-white border border-gray-300 rounded px-2 py-1"
             />
           </div>
 
-          {/* Criar */}
           <button
             type="submit"
             disabled={loading}

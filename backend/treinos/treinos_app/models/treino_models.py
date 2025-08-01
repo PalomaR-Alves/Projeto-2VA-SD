@@ -15,7 +15,7 @@ class Treino(models.Model):
     aluno_id = models.IntegerField()      # ID do aluno no users_app
     professor_id = models.IntegerField()  # ID do professor no users_app
 
-    dia_da_semana = models.CharField(max_length=10, choices=DIAS_SEMANA)
+    dia_da_semana = models.CharField(max_length=10, choices=DIAS_SEMANA, default="")
     data_inicio = models.DateField()
     data_fim = models.DateField()
     observacoes = models.TextField(blank=True)

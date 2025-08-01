@@ -1,10 +1,8 @@
 import { useState, useEffect } from 'react'
 
-const modoTeste = true
-
 export default function EditarPerfilAluno() {
-  const stored = localStorage.getItem('user')
-  const user = stored ? JSON.parse(stored) : null
+  const [user, setUser] = useState(null)
+  const [loading, setLoading] = useState(true)
 
   const [form, setForm] = useState({
     nome: '',
@@ -16,73 +14,95 @@ export default function EditarPerfilAluno() {
     altura_cm: '',
     peso_kg: '',
   })
-  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const stored = localStorage.getItem('user')
+    if (stored) setUser(JSON.parse(stored))
+  }, [])
 
   useEffect(() => {
     if (!user) return
 
-    if (modoTeste) {
-      setForm({
-        nome:      user.nome || '',
-        email:     user.email || '',
-        telefone:  user.telefone || '',
-        genero:    user.genero || '',
-        data_nasc: user.data_nasc || '',
-        objetivo:  user.objetivo || '',
-        altura_cm: user.altura_cm?.toString() || '',
-        peso_kg:   user.peso_kg?.toString() || '',
-      })
-      setLoading(false)
-      return
-    }
-
     fetch(`http://localhost:8000/users/${user.id}/`)
       .then(r => r.ok ? r.json() : Promise.reject())
       .then(data => {
+        const dataNascISO = data.data_nasc?.includes('/')
+          ? normalizeDate(data.data_nasc)
+          : data.data_nasc || ''
+
         setForm({
-          nome:      data.nome || '',
-          email:     data.email || '',
-          telefone:  data.telefone || '',
-          genero:    data.genero || '',
-          data_nasc: data.data_nasc || '',
-          objetivo:  data.objetivo || '',
+          nome: data.nome || '',
+          email: data.email || '',
+          telefone: data.telefone || '',
+          genero: data.genero || '',
+          data_nasc: dataNascISO,
+          objetivo: data.objetivo || '',
           altura_cm: data.altura_cm?.toString() || '',
-          peso_kg:   data.peso_kg?.toString() || '',
+          peso_kg: data.peso_kg?.toString() || '',
         })
       })
       .catch(() => alert('Erro ao carregar perfil de aluno'))
       .finally(() => setLoading(false))
   }, [user])
 
-  if (!user)   return <p>Carregando usuário...</p>
-  if (loading) return <p>Carregando perfil...</p>
-
   const handleChange = e => {
     const { name, value } = e.target
     setForm(f => ({ ...f, [name]: value }))
   }
+
+  const formatDate = (dateStr) => {
+    // Se vier no formato DD/MM/AAAA, converte para YYYY-MM-DD
+    if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) {
+      const [dia, mes, ano] = dateStr.split('/')
+      return `${ano}-${mes.padStart(2, '0')}-${dia.padStart(2, '0')}`
+    }
+    return dateStr
+  }
+
   const handleSubmit = async e => {
     e.preventDefault()
+
+    const normalizeDate = (str) => {
+      if (str.includes('/')) {
+        const [d, m, y] = str.split('/')
+        return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`
+      }
+      return str
+    }
+
+    const payload = {
+      nome: form.nome || '',
+      email: form.email || '',
+      telefone: form.telefone || '',
+      genero: form.genero || '',
+      data_nasc: normalizeDate(form.data_nasc),
+      objetivo: form.objetivo || '',
+      altura_cm: form.altura_cm !== '' ? Number(form.altura_cm) : null,
+      peso_kg: form.peso_kg !== '' ? Number(form.peso_kg) : null,
+    }
+
     try {
-      const res = await fetch(`http://localhost:8000/users/${user.id}/`, {
+      const res = await fetch(`http://localhost:8000/users/${user.id}/update/`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          nome:      form.nome,
-          email:     form.email,
-          telefone:  form.telefone,
-          genero:    form.genero,
-          data_nasc: form.data_nasc,
-          objetivo:  form.objetivo,
-          altura_cm: Number(form.altura_cm),
-          peso_kg:   Number(form.peso_kg),
-        }),
+        body: JSON.stringify(payload),
       })
-      alert(res.ok ? 'Perfil de aluno atualizado!' : 'Erro ao atualizar.')
+
+      if (res.ok) {
+        await res.text()  
+        alert('Perfil atualizado com sucesso!')
+      } else {
+        alert(`Erro ${res.status}`)
+      }
     } catch {
+
       alert('Erro na requisição.')
     }
   }
+
+
+  if (!user)   return <p>Carregando usuário...</p>
+  if (loading) return <p>Carregando perfil...</p>
 
   return (
     <div
@@ -96,82 +116,74 @@ export default function EditarPerfilAluno() {
         <form onSubmit={handleSubmit} className="space-y-3">
           <input
             name="nome"
-            defaultValue={form.nome}
+            value={form.nome}
             onChange={handleChange}
             placeholder="Nome"
-            style={{ backgroundColor: '#fff' }}
-            className="w-full p-2 rounded border"
+            className="w-full p-2 rounded border bg-white"
           />
 
           <input
             name="email"
-            defaultValue={form.email}
+            value={form.email}
             onChange={handleChange}
             placeholder="Email"
-            style={{ backgroundColor: '#fff' }}
-            className="w-full p-2 rounded border"
+            className="w-full p-2 rounded border bg-white"
           />
 
           <input
             name="telefone"
-            defaultValue={form.telefone}
+            value={form.telefone}
             onChange={handleChange}
             placeholder="Telefone"
-            style={{ backgroundColor: '#fff' }}
-            className="w-full p-2 rounded border"
+            className="w-full p-2 rounded border bg-white"
           />
 
           <select
             name="genero"
-            defaultValue={form.genero}
+            value={form.genero}
             onChange={handleChange}
-            style={{ backgroundColor: '#fff', color: '#000' }}
-            className="w-full p-2 rounded border"
-            >
-            <option value="" style={{ color: '#000' }}>Selecione o gênero</option>
-            <option value="masculino" style={{ color: '#000' }}>Masculino</option>
-            <option value="feminino"  style={{ color: '#000' }}>Feminino</option>
-            <option value="outros"    style={{ color: '#000' }}>Outros</option>
+            className="w-full p-2 rounded border bg-white text-black appearance-none"
+          >
+            <option value="">Selecione o gênero</option>
+            <option value="masculino">Masculino</option>
+            <option value="feminino">Feminino</option>
+            <option value="outros">Outros</option>
           </select>
 
           <input
             name="data_nasc"
             type="date"
-            defaultValue={form.data_nasc}
+            value={form.data_nasc}
             onChange={handleChange}
-            style={{ backgroundColor: '#fff' }}
-            className="w-full p-2 rounded border"
+            className="w-full p-2 rounded border bg-white"
           />
 
           <input
             name="altura_cm"
             type="number"
             min="0"
-            defaultValue={form.altura_cm}
+            value={form.altura_cm}
             onChange={handleChange}
             placeholder="Altura (cm)"
-            style={{ backgroundColor: '#fff' }}
-            className="w-full p-2 rounded border"
+            className="w-full p-2 rounded border bg-white"
           />
 
           <input
             name="peso_kg"
             type="number"
             min="0"
-            defaultValue={form.peso_kg}
+            value={form.peso_kg}
             onChange={handleChange}
             placeholder="Peso (kg)"
-            style={{ backgroundColor: '#fff' }}
-            className="w-full p-2 rounded border"
+            className="w-full p-2 rounded border bg-white"
           />
 
           <input
             name="objetivo"
-            defaultValue={form.objetivo}
+            value={form.objetivo}
             onChange={handleChange}
             placeholder="Objetivo"
-            style={{ backgroundColor: '#fff' }}
-            className="w-full p-2 rounded border"
+            className="w-full p-2 rounded border bg-white"
           />
 
           <button type="submit" className="btn w-full">
