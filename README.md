@@ -5,6 +5,9 @@ Este projeto utiliza Python com framework Django nos módulos do back-end, e Jav
 
 ![Diagrama de Arquitetura](diagrama-breaking_fat.png)
 
+#### Diagrama ER
+![Diagrama ER](diagrama_ER_sd.png)
+
 ### Breaking Fat
 <img src="frontend/public/breaking_fat.png" alt="Breaking Fat Logo" width="300"/>
 
@@ -30,4 +33,5 @@ docker-compose down
 4. Rebuildar containers (opcional, reconstrói imagens e reinicia containers)
 ```
 docker-compose up --build
+
 ```
